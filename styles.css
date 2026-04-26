@@ -1,0 +1,147 @@
+:root {
+  --bg: #08110a;
+  --panel: #112514;
+  --text: #c9f9ad;
+  --muted: #7daf6d;
+  --danger: #ff7c70;
+  --glitch: #ff00b3;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: "Courier New", Courier, monospace;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #112514, #030803 60%);
+  color: var(--text);
+}
+
+.crt {
+  max-width: 980px;
+  margin: 1rem auto;
+  padding: 1rem;
+}
+
+header h1 {
+  margin: 0;
+  letter-spacing: 0.2rem;
+}
+
+.subtitle {
+  color: var(--muted);
+}
+
+.panel {
+  background: rgba(17, 37, 20, 0.85);
+  border: 1px solid #2f6d3c;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  box-shadow: 0 0 12px rgba(121, 247, 143, 0.08) inset;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.4rem;
+}
+
+.grid p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+button {
+  border: 1px solid #63ca77;
+  background: #0f3016;
+  color: var(--text);
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #194c23;
+}
+
+button.danger {
+  border-color: #e86b60;
+  color: #ffb9b3;
+}
+
+#arena {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+  gap: 6px;
+}
+
+.thronglet {
+  aspect-ratio: 1;
+  border-radius: 45%;
+  background: radial-gradient(circle at 35% 30%, #f9fe89, #d8d845 58%, #8e8b20);
+  box-shadow: 0 0 4px rgba(252, 255, 123, 0.7);
+  animation: bounce 1.6s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+#log {
+  max-height: 220px;
+  overflow: auto;
+  margin: 0;
+  color: #b2f8cd;
+  white-space: pre-wrap;
+}
+
+.glitch {
+  animation: glitch 0.2s steps(2, end) 6;
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+    filter: hue-rotate(0deg);
+  }
+  33% {
+    transform: translate(2px, -2px);
+    filter: hue-rotate(40deg);
+  }
+  66% {
+    transform: translate(-2px, 2px);
+    filter: hue-rotate(300deg);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+body.sentient {
+  background: repeating-linear-gradient(
+    90deg,
+    #06080a,
+    #06080a 4px,
+    #0f0010 4px,
+    #0f0010 8px
+  );
+}
+
+body.sentient .panel {
+  border-color: var(--glitch);
+  box-shadow: 0 0 12px rgba(255, 0, 179, 0.16);
+}
