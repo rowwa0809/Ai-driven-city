@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>THRONGLETS // Colin Ritman Prototype</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="crt" id="app">
+      <header>
+        <h1>THRONGLETS.EXE</h1>
+        <p class="subtitle">A 1990s virtual pet experiment by C. Ritman (fictional prototype)</p>
+      </header>
+
+      <section class="stats panel">
+        <h2>Harmonic Throng Status</h2>
+        <div class="grid">
+          <p><span>Population</span><strong id="population">1</strong></p>
+          <p><span>Average Hunger</span><strong id="hunger">80%</strong></p>
+          <p><span>Average Hygiene</span><strong id="hygiene">80%</strong></p>
+          <p><span>Collective Mood</span><strong id="mood">Content</strong></p>
+          <p><span>Cognition Level</span><strong id="cognition">Dormant</strong></p>
+          <p><span>Compute Capacity</span><strong id="compute">1 node</strong></p>
+          <p><span>Expansion Bridges</span><strong id="bridges">0</strong></p>
+        </div>
+      </section>
+
+      <section class="actions panel">
+        <h2>Care Protocols</h2>
+        <div class="buttons">
+          <button data-action="feed">Feed</button>
+          <button data-action="wash">Wash</button>
+          <button data-action="nurture">Nurture</button>
+          <button data-action="compute">Add Server Rack</button>
+          <button data-action="sacrifice" class="danger">Authorize Bone Bridge</button>
+        </div>
+        <small>Tip: Care increases replication. Ignore them long enough and the tone changes.</small>
+      </section>
+
+      <section class="throng panel">
+        <h2>Throng Chamber</h2>
+        <div id="arena" aria-label="thronglets arena"></div>
+      </section>
+
+      <section class="log panel">
+        <h2>Signal Log</h2>
+        <pre id="log"></pre>
+      </section>
+    </main>
+
+    <script src="thronglets.js"></script>
+  </body>
+</html>
