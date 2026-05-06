@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Narrative Intelligence · OSI Terminal</title>
+    <meta name="description" content="A market intelligence operating system for retail traders — dominant narratives, regime contradictions, cross-asset confirmation, sentiment velocity, and psychology overlays." />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-grain" aria-hidden="true"></div>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <defs>
+              <linearGradient id="bm" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#7af2c4"/>
+                <stop offset="1" stop-color="#6ea8fe"/>
+              </linearGradient>
+            </defs>
+            <path d="M3 18 L8 8 L12 14 L16 6 L21 18" stroke="url(#bm)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="8" cy="8" r="1.6" fill="#7af2c4"/>
+            <circle cx="16" cy="6" r="1.6" fill="#6ea8fe"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-line">OSI · NARRATIVE INTELLIGENCE</span>
+          <span class="brand-sub">Regime · Contradiction · Psychology</span>
+        </div>
+      </div>
+
+      <nav class="topnav" aria-label="primary">
+        <a class="active" href="#">Narratives</a>
+        <a href="#" title="Coming soon">Flow</a>
+        <a href="#" title="Coming soon">Volatility</a>
+        <a href="#" title="Coming soon">Macro</a>
+        <a href="#" title="Coming soon">Backtest</a>
+      </nav>
+
+      <div class="topright">
+        <span class="regime-pill" id="regime-pill" title="Composite regime read">
+          <i class="dot live"></i>
+          <span id="regime-text">Loading…</span>
+        </span>
+        <span class="time-clock" id="time-clock">--:--:-- ET</span>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- HERO: dominant narrative -->
+      <section class="card hero" id="hero">
+        <div class="card-edge" aria-hidden="true"></div>
+        <div class="hero-head">
+          <span class="eyebrow">Dominant Market Narrative</span>
+          <span class="hero-meta" id="hero-meta">— weeks active · confidence —</span>
+        </div>
+        <h1 class="hero-title" id="hero-title">—</h1>
+        <p class="hero-summary" id="hero-summary">—</p>
+
+        <div class="hero-meters">
+          <div class="meter">
+            <span class="meter-label">Strength</span>
+            <div class="meter-bar"><span class="meter-fill" id="hero-strength"></span></div>
+            <span class="meter-value" id="hero-strength-val">—</span>
+          </div>
+          <div class="meter">
+            <span class="meter-label">Cross-asset confirmation</span>
+            <div class="meter-bar"><span class="meter-fill positive" id="hero-confirm"></span></div>
+            <span class="meter-value" id="hero-confirm-val">—</span>
+          </div>
+          <div class="meter">
+            <span class="meter-label">Dissent</span>
+            <div class="meter-bar"><span class="meter-fill warn" id="hero-dissent"></span></div>
+            <span class="meter-value" id="hero-dissent-val">—</span>
+          </div>
+          <div class="meter velocity-meter">
+            <span class="meter-label">7d velocity</span>
+            <span class="velocity-val" id="hero-velocity">—</span>
+            <span class="velocity-sub" id="hero-trend">—</span>
+          </div>
+        </div>
+
+        <div class="hero-rotator">
+          <span class="rotator-tag">LATEST READ</span>
+          <p id="hero-rotator">Initializing model…</p>
+        </div>
+      </section>
+
+      <!-- TRACKER + PSYCHOLOGY row -->
+      <section class="card tracker" id="tracker">
+        <header class="card-header">
+          <h2>Narrative Tracker</h2>
+          <span class="muted">Strength · 7d trend · cross-asset confirmation</span>
+        </header>
+        <div class="tracker-list" id="tracker-list" role="list"></div>
+      </section>
+
+      <section class="card psychology" id="psychology">
+        <header class="card-header">
+          <h2>Market Psychology</h2>
+          <span class="muted">Composite read</span>
+        </header>
+        <div class="psy-grid" id="psy-grid"></div>
+        <p class="psy-caption" id="psy-caption">—</p>
+      </section>
+
+      <!-- CONTRADICTION MATRIX -->
+      <section class="card contradiction" id="contradiction">
+        <header class="card-header">
+          <h2>Regime Contradiction Engine</h2>
+          <span class="muted">Narrative × market signal · click a cell for the read</span>
+        </header>
+        <div class="matrix-wrap">
+          <div class="matrix" id="matrix" role="grid" aria-label="contradiction matrix"></div>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><i class="dot ok"></i>Aligned</span>
+          <span class="legend-item"><i class="dot watch"></i>Watch</span>
+          <span class="legend-item"><i class="dot stress"></i>Contradiction</span>
+        </div>
+        <div class="contradiction-detail" id="contradiction-detail" hidden>
+          <span class="cd-eyebrow" id="cd-eyebrow">—</span>
+          <p class="cd-body" id="cd-body">—</p>
+        </div>
+      </section>
+
+      <!-- CROSS-ASSET CONFIRMATION -->
+      <section class="card crossasset" id="crossasset">
+        <header class="card-header">
+          <h2>Cross-Asset Confirmation</h2>
+          <span class="muted">Each asset class · vs the dominant narrative</span>
+        </header>
+        <div class="ca-grid" id="ca-grid"></div>
+      </section>
+
+      <!-- SENTIMENT VELOCITY -->
+      <section class="card velocity" id="velocity">
+        <header class="card-header">
+          <h2>Sentiment Shift Velocity</h2>
+          <span class="muted">14d narrative strength · acceleration</span>
+        </header>
+        <div class="vel-grid" id="vel-grid"></div>
+      </section>
+
+      <!-- INSIGHT FEED -->
+      <section class="card insights" id="insights">
+        <header class="card-header">
+          <h2>Plain-English Insights</h2>
+          <span class="muted">What the model is reading right now</span>
+        </header>
+        <ul class="insight-list" id="insight-list"></ul>
+      </section>
+    </main>
+
+    <footer class="footnote">
+      <span>Informational only. Not financial advice. Data shown is synthetic for prototype demonstration.</span>
+      <span class="status" id="status"><i class="dot live"></i>live · prototype</span>
+    </footer>
+
+    <!-- Tooltip element for matrix hover -->
+    <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
