@@ -41,8 +41,11 @@
       </nav>
 
       <div class="topright">
-        <span class="regime-pill" id="regime-pill" title="Composite regime read">
+        <span class="source-pill" id="source-pill" title="Data source">
           <i class="dot live"></i>
+          <span id="source-text">static</span>
+        </span>
+        <span class="regime-pill" id="regime-pill" title="Composite regime read">
           <span id="regime-text">Loading…</span>
         </span>
         <span class="time-clock" id="time-clock">--:--:-- ET</span>
@@ -107,6 +110,17 @@
         <p class="psy-caption" id="psy-caption">—</p>
       </section>
 
+      <!-- REGIME TIMELINE -->
+      <section class="card timeline" id="timeline">
+        <header class="card-header">
+          <h2>Regime Transition Timeline</h2>
+          <span class="muted">Past 18 months · regimes &amp; transitions</span>
+        </header>
+        <div class="tl-axis" id="tl-axis"></div>
+        <div class="tl-rows" id="tl-rows"></div>
+        <p class="tl-caption" id="tl-caption">—</p>
+      </section>
+
       <!-- CONTRADICTION MATRIX -->
       <section class="card contradiction" id="contradiction">
         <header class="card-header">
@@ -134,6 +148,52 @@
           <span class="muted">Each asset class · vs the dominant narrative</span>
         </header>
         <div class="ca-grid" id="ca-grid"></div>
+      </section>
+
+      <!-- DEPENDENCY GRAPH -->
+      <section class="card depgraph" id="depgraph">
+        <header class="card-header">
+          <h2>Narrative Dependency Graph</h2>
+          <span class="muted">Reinforcing &amp; opposing relationships · hover an edge for the read</span>
+        </header>
+        <div class="dg-wrap">
+          <svg id="dg-svg" viewBox="-1.25 -1.25 2.5 2.5" preserveAspectRatio="xMidYMid meet" aria-label="dependency graph"></svg>
+          <div class="dg-legend">
+            <span class="legend-item"><i class="dot ok"></i>reinforce</span>
+            <span class="legend-item"><i class="dot stress"></i>oppose</span>
+            <span class="legend-item muted">edge thickness = strength</span>
+          </div>
+        </div>
+        <div class="dg-detail" id="dg-detail" hidden>
+          <span class="cd-eyebrow" id="dg-eyebrow">—</span>
+          <p class="cd-body" id="dg-body">—</p>
+        </div>
+      </section>
+
+      <!-- BACKTEST -->
+      <section class="card backtest" id="backtest">
+        <header class="card-header">
+          <h2>Backtest · How Past Contradictions Resolved</h2>
+          <span class="muted">When did contradictions become regime breaks?</span>
+        </header>
+        <div class="bt-stats" id="bt-stats"></div>
+        <div class="bt-table-wrap">
+          <table class="bt-table" id="bt-table">
+            <thead>
+              <tr>
+                <th>Detected</th>
+                <th>Narrative</th>
+                <th>Signal</th>
+                <th class="num">Severity</th>
+                <th class="num">Resolved (d)</th>
+                <th>Regime Break</th>
+                <th class="num">Reaction</th>
+                <th>Lesson</th>
+              </tr>
+            </thead>
+            <tbody id="bt-tbody"></tbody>
+          </table>
+        </div>
       </section>
 
       <!-- SENTIMENT VELOCITY -->

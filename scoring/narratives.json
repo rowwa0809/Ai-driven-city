@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-05-06",
+
+  "_doc": [
+    "Narrative definitions — the source of truth for the scoring pipeline.",
+    "Each narrative declares which input dimensions it cares about.",
+    "Weights drive the composite strength score; polarity drives sign on each input.",
+    "macroFit is a small dict that maps macro indicator → preferred direction (+1/-1/0)."
+  ],
+
+  "regime": {
+    "candidates": [
+      { "id": "late-cycle-disinflation",   "label": "Late-cycle expansion · Disinflationary tilt" },
+      { "id": "soft-landing",              "label": "Soft Landing · Risk-on consensus" },
+      { "id": "stagflation",               "label": "Stagflation · Cost-push" },
+      { "id": "recession-onset",           "label": "Recession Onset · Risk-off" },
+      { "id": "early-cycle-reflation",     "label": "Early-cycle reflation" }
+    ]
+  },
+
+  "narratives": [
+    {
+      "id": "ai-supercycle",
+      "name": "AI Supercycle",
+      "tagline": "Hyperscaler capex sustains semiconductor & power demand into 2027.",
+      "polarity": "bullish-equity",
+      "ageWeeks": 92,
+      "drivers": ["NVDA capex guides", "Hyperscaler 2026 capex +28% YoY", "TSMC CoWoS utilization"],
+      "with":    ["NVDA", "AVGO", "TSM", "VST", "SOX"],
+      "against": ["MU", "WDC"],
+      "macroFit": { "real_rates": -1, "dxy": 0, "vix": -1 },
+      "weights": { "news": 0.32, "flow": 0.28, "price": 0.22, "macro": 0.10, "inertia": 0.08 }
+    },
+    {
+      "id": "soft-landing",
+      "name": "Soft Landing",
+      "tagline": "Inflation glides to 2-handle without breaking labor market.",
+      "polarity": "bullish-risk",
+      "ageWeeks": 18,
+      "drivers": ["Core services ex-shelter cooling", "Wage growth easing", "Productivity surprise"],
+      "with":    ["SPY", "HYG", "XLY"],
+      "against": ["VIX", "TLT"],
+      "macroFit": { "vix": -1, "credit_spread": -1, "real_rates": -1 },
+      "weights": { "news": 0.25, "flow": 0.18, "price": 0.27, "macro": 0.20, "inertia": 0.10 }
+    },
+    {
+      "id": "higher-for-longer",
+      "name": "Higher-for-Longer",
+      "tagline": "Sticky services + fiscal supply keep real rates elevated.",
+      "polarity": "bearish-duration",
+      "ageWeeks": 31,
+      "drivers": ["10y term premium re-pricing", "Coupon size revisions", "Owner-equiv rent stickiness"],
+      "with":    ["DXY", "TBT"],
+      "against": ["TLT", "REIT", "QQQ"],
+      "macroFit": { "real_rates": 1, "dxy": 1, "ten_year_yield": 1 },
+      "weights": { "news": 0.18, "flow": 0.12, "price": 0.30, "macro": 0.30, "inertia": 0.10 }
+    },
+    {
+      "id": "reshoring",
+      "name": "Reshoring & Capex Boom",
+      "tagline": "IRA/CHIPS afterglow + national-security capex floor.",
+      "polarity": "structural",
+      "ageWeeks": 78,
+      "drivers": ["Construction spend ex-resi", "Industrial backlogs", "DoD obligations"],
+      "with":    ["XLI", "ETN", "CAT"],
+      "against": ["XHB"],
+      "macroFit": { "fed_funds": 0, "industrial_production": 1 },
+      "weights": { "news": 0.22, "flow": 0.18, "price": 0.25, "macro": 0.25, "inertia": 0.10 }
+    },
+    {
+      "id": "energy-stress",
+      "name": "Energy Transition Stress",
+      "tagline": "Power grid + uranium can't keep up with AI/EV demand curve.",
+      "polarity": "structural-bullish-commodities",
+      "ageWeeks": 24,
+      "drivers": ["Datacenter MW queue", "Uranium spot tightness", "Transmission backlog"],
+      "with":    ["XLU", "URA", "HG", "VST"],
+      "against": ["TAN"],
+      "macroFit": { "ten_year_yield": 0, "vix": 0 },
+      "weights": { "news": 0.28, "flow": 0.18, "price": 0.30, "macro": 0.14, "inertia": 0.10 }
+    },
+    {
+      "id": "bond-vigilantes",
+      "name": "Bond Vigilantes Returning",
+      "tagline": "Term premium normalizes as fiscal path becomes the story.",
+      "polarity": "bearish-duration",
+      "ageWeeks": 9,
+      "drivers": ["Net coupon supply Q3", "Foreign UST share dropping", "5y5y inflation drift"],
+      "with":    ["DXY", "GLD"],
+      "against": ["TLT", "IEF"],
+      "macroFit": { "ten_year_yield": 1, "term_premium": 1 },
+      "weights": { "news": 0.30, "flow": 0.10, "price": 0.30, "macro": 0.22, "inertia": 0.08 }
+    },
+    {
+      "id": "dxy-wrecking",
+      "name": "Dollar Wrecking Ball",
+      "tagline": "USD strength compresses non-US earnings & EM liquidity.",
+      "polarity": "bearish-em",
+      "ageWeeks": 12,
+      "drivers": ["Rate-diff carry", "Safe-haven bid Q1"],
+      "with":    ["DXY"],
+      "against": ["EEM", "EWZ", "FXI"],
+      "macroFit": { "dxy": 1, "real_rates": 1 },
+      "weights": { "news": 0.18, "flow": 0.15, "price": 0.32, "macro": 0.25, "inertia": 0.10 }
+    },
+    {
+      "id": "china-stimulus",
+      "name": "China Stimulus Hopium",
+      "tagline": "Property backstop + consumer subsidies — credible or stage-managed?",
+      "polarity": "tactical-bullish",
+      "ageWeeks": 7,
+      "drivers": ["PBoC RRR cuts", "Property white-list"],
+      "with":    ["KWEB", "FXI"],
+      "against": ["DXY"],
+      "macroFit": { "dxy": -1 },
+      "weights": { "news": 0.40, "flow": 0.18, "price": 0.20, "macro": 0.12, "inertia": 0.10 }
+    },
+    {
+      "id": "geopolitical",
+      "name": "Geopolitical Premium",
+      "tagline": "Strait + Gulf risk repriced into oil & defense.",
+      "polarity": "tail-risk",
+      "ageWeeks": 35,
+      "drivers": ["Shipping insurance rates", "Defense order books"],
+      "with":    ["LMT", "NOC", "BNO"],
+      "against": ["AMZN"],
+      "macroFit": { "vix": 1 },
+      "weights": { "news": 0.42, "flow": 0.14, "price": 0.22, "macro": 0.12, "inertia": 0.10 }
+    },
+    {
+      "id": "crypto-rerating",
+      "name": "Crypto Re-rating",
+      "tagline": "ETF flows + sovereign adoption move BTC into reserve discourse.",
+      "polarity": "speculative",
+      "ageWeeks": 16,
+      "drivers": ["Spot ETF AUM", "Halving supply effect"],
+      "with":    ["BTC", "MSTR", "COIN"],
+      "against": ["TLT"],
+      "macroFit": { "real_rates": -1, "vix": -1 },
+      "weights": { "news": 0.28, "flow": 0.20, "price": 0.30, "macro": 0.12, "inertia": 0.10 }
+    }
+  ],
+
+  "signals": [
+    { "id": "vol",   "label": "Vol term structure", "polarity_check": "vix" },
+    { "id": "brd",   "label": "Equity breadth",     "polarity_check": "breadth" },
+    { "id": "crd",   "label": "Credit spreads",     "polarity_check": "credit_spread" },
+    { "id": "rates", "label": "Rates / curve",      "polarity_check": "ten_year_yield" },
+    { "id": "fx",    "label": "FX / DXY",           "polarity_check": "dxy" },
+    { "id": "flow",  "label": "Retail vs dealer flow", "polarity_check": "retail_skew" }
+  ],
+
+  "crossAsset": [
+    { "id": "spx",  "label": "S&P 500",     "cls": "Equities",  "symbol": "SPY" },
+    { "id": "ndx",  "label": "Nasdaq 100",  "cls": "Equities",  "symbol": "QQQ" },
+    { "id": "rty",  "label": "Russell 2000","cls": "Equities",  "symbol": "IWM" },
+    { "id": "sox",  "label": "PHLX SOX",    "cls": "Equities",  "symbol": "SOX" },
+    { "id": "xlu",  "label": "Utilities",   "cls": "Equities",  "symbol": "XLU" },
+    { "id": "hyg",  "label": "HY credit",   "cls": "Credit",    "symbol": "HYG" },
+    { "id": "lqd",  "label": "IG credit",   "cls": "Credit",    "symbol": "LQD" },
+    { "id": "tlt",  "label": "20+ UST",     "cls": "Rates",     "symbol": "TLT" },
+    { "id": "ief",  "label": "7-10y UST",   "cls": "Rates",     "symbol": "IEF" },
+    { "id": "dxy",  "label": "DXY",         "cls": "FX",        "symbol": "DXY" },
+    { "id": "emfx", "label": "EM FX",       "cls": "FX",        "symbol": "EEM" },
+    { "id": "cl",   "label": "WTI crude",   "cls": "Commodity", "symbol": "USO" },
+    { "id": "hg",   "label": "Copper",      "cls": "Commodity", "symbol": "HG" },
+    { "id": "gold", "label": "Gold",        "cls": "Commodity", "symbol": "GLD" },
+    { "id": "u",    "label": "Uranium",     "cls": "Commodity", "symbol": "URA" },
+    { "id": "btc",  "label": "Bitcoin",     "cls": "Crypto",    "symbol": "BTC" }
+  ],
+
+  "dependencies": [
+    { "from": "ai-supercycle",     "to": "energy-stress",     "type": "reinforce", "strength": 0.84, "note": "AI capex pulls forward power-grid + uranium demand." },
+    { "from": "ai-supercycle",     "to": "reshoring",         "type": "reinforce", "strength": 0.62, "note": "Onshoring of semis + datacenters compounds capex story." },
+    { "from": "ai-supercycle",     "to": "higher-for-longer", "type": "reinforce", "strength": 0.41, "note": "Capex demand keeps real-rate floor higher." },
+    { "from": "soft-landing",      "to": "ai-supercycle",     "type": "reinforce", "strength": 0.55, "note": "Risk-on regime supports multiples on long-duration AI." },
+    { "from": "higher-for-longer", "to": "soft-landing",      "type": "oppose",    "strength": 0.78, "note": "Sticky rates contradict friction-free disinflation." },
+    { "from": "higher-for-longer", "to": "bond-vigilantes",   "type": "reinforce", "strength": 0.81, "note": "Same forcing function — fiscal supply + inflation persistence." },
+    { "from": "higher-for-longer", "to": "crypto-rerating",   "type": "oppose",    "strength": 0.66, "note": "Real rates pressure speculative duration." },
+    { "from": "bond-vigilantes",   "to": "dxy-wrecking",      "type": "reinforce", "strength": 0.58, "note": "Term premium widens carry; supports USD." },
+    { "from": "dxy-wrecking",      "to": "china-stimulus",    "type": "oppose",    "strength": 0.73, "note": "Strong USD limits PBoC stimulus credibility." },
+    { "from": "dxy-wrecking",      "to": "soft-landing",      "type": "oppose",    "strength": 0.45, "note": "USD wrecking ball compresses non-US earnings — dampens global goldilocks." },
+    { "from": "energy-stress",     "to": "geopolitical",      "type": "reinforce", "strength": 0.49, "note": "Strait/Gulf risk amplifies energy bottleneck premium." },
+    { "from": "geopolitical",      "to": "soft-landing",      "type": "oppose",    "strength": 0.42, "note": "Tail risk unsettles risk-on consensus." },
+    { "from": "reshoring",         "to": "higher-for-longer", "type": "reinforce", "strength": 0.36, "note": "Capex-led growth keeps demand pressure on rates." },
+    { "from": "china-stimulus",    "to": "geopolitical",      "type": "oppose",    "strength": 0.31, "note": "Stimulus optimism dampens tail-risk pricing." },
+    { "from": "crypto-rerating",   "to": "ai-supercycle",     "type": "reinforce", "strength": 0.28, "note": "Same liquidity-sensitive risk basket; rerates together." }
+  ]
+}

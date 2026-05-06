@@ -28,7 +28,37 @@
     return node;
   };
 
-  const { REGIME, NARRATIVES, SIGNALS, MATRIX, CROSSASSET, PSYCHOLOGY, INSIGHTS } = window.NI;
+  // Bind locals lazily — they may be replaced once we fetch data.json.
+  let REGIME, REGIME_HISTORY, NARRATIVES, SIGNALS, MATRIX, CROSSASSET, PSYCHOLOGY, INSIGHTS, DEPENDENCIES, BACKTEST;
+  function bindFromNI() {
+    ({ REGIME, REGIME_HISTORY, NARRATIVES, SIGNALS, MATRIX, CROSSASSET, PSYCHOLOGY, INSIGHTS, DEPENDENCIES, BACKTEST } = window.NI);
+  }
+  bindFromNI();
+
+  // Try to fetch a live snapshot from the scoring service (or its persisted
+  // data.json). Falls back silently to the static window.NI on error.
+  async function loadLiveData() {
+    try {
+      const res = await fetch("./data.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("no data.json");
+      const live = await res.json();
+      Object.assign(window.NI, live);
+      bindFromNI();
+      return { source: live.source || "live" };
+    } catch (e) {
+      try {
+        // If the user is running scoring/server.py, /api/state will work too.
+        const res = await fetch("/api/state", { cache: "no-store" });
+        if (!res.ok) throw new Error("no api");
+        const live = await res.json();
+        Object.assign(window.NI, live);
+        bindFromNI();
+        return { source: live.source || "live" };
+      } catch {
+        return { source: "static-fallback" };
+      }
+    }
+  }
 
   // App state — mutable so we can swap the dominant narrative
   // without re-executing every render path manually.
@@ -376,6 +406,217 @@
     }
   }
 
+  // ---- Regime timeline ---------------------------------------
+  function renderTimeline() {
+    if (!REGIME_HISTORY || !REGIME_HISTORY.length) return;
+    const earliest = Math.max(...REGIME_HISTORY.map(r => r.startWeeksAgo));
+    const total = earliest;
+
+    // Axis ticks at every 13 weeks (≈ quarterly)
+    const axis = $("#tl-axis");
+    axis.innerHTML = "";
+    for (let w = total; w >= 0; w -= 13) {
+      const left = ((total - w) / total) * 100;
+      const tick = el("span", { class: "tick", style: `left:${left}%` },
+        `${w}w`);
+      axis.appendChild(tick);
+    }
+
+    const rows = $("#tl-rows");
+    rows.innerHTML = "";
+
+    // Group: each regime gets its own row so bars don't visually overlap.
+    for (const r of REGIME_HISTORY) {
+      const row = el("div", { class: "tl-row" });
+      const left  = ((total - r.startWeeksAgo) / total) * 100;
+      const right = ((total - r.endWeeksAgo)   / total) * 100;
+      const width = Math.max(2, right - left);
+      const isCurrent = r.endWeeksAgo === 0;
+      const bar = el("div",
+        { class: `tl-bar ${r.polarity || "neutral"} ${isCurrent ? "current" : ""}`,
+          style: `left:${left}%; width:${width}%`,
+          title: `${r.name} · ${r.startWeeksAgo}w → ${r.endWeeksAgo}w · peak ${r.peakStrength}\n${r.transitionReason}` },
+        r.name,
+        el("small", {}, `pk ${r.peakStrength}`)
+      );
+      row.appendChild(bar);
+      rows.appendChild(row);
+    }
+
+    const last = REGIME_HISTORY[REGIME_HISTORY.length - 1];
+    $("#tl-caption").textContent =
+      `Regime cadence: ${REGIME_HISTORY.length} states across ~${total}w. ` +
+      `Current state: ${last.name} (${last.startWeeksAgo}w in) — ${last.transitionReason}`;
+  }
+
+  // ---- Dependency graph (SVG) --------------------------------
+  function renderDependencyGraph() {
+    if (!DEPENDENCIES) return;
+    const svg = $("#dg-svg");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const NS = "http://www.w3.org/2000/svg";
+
+    const nodeById = Object.fromEntries(DEPENDENCIES.nodes.map(n => [n.id, n]));
+
+    // Arrowhead marker for direction
+    const defs = document.createElementNS(NS, "defs");
+    defs.innerHTML = `
+      <marker id="arrow-ok" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#54d99c"/>
+      </marker>
+      <marker id="arrow-bad" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#f06978"/>
+      </marker>`;
+    svg.appendChild(defs);
+
+    // Edges first so nodes paint on top.
+    for (const e of DEPENDENCIES.edges) {
+      const a = nodeById[e.from], b = nodeById[e.to];
+      if (!a || !b) continue;
+      // Slight quadratic curve so multi-edge pairs don't overlap visually.
+      const mx = (a.x + b.x) / 2;
+      const my = (a.y + b.y) / 2;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const norm = Math.hypot(dx, dy) || 1;
+      const cx = mx + (-dy / norm) * 0.12;
+      const cy = my + ( dx / norm) * 0.12;
+
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("d", `M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`);
+      path.setAttribute("class", `dg-edge ${e.type}`);
+      path.setAttribute("stroke-opacity", String(0.35 + e.strength * 0.5));
+      path.setAttribute("stroke-width", String(0.005 + e.strength * 0.025));
+      path.setAttribute("marker-end",
+        e.type === "reinforce" ? "url(#arrow-ok)" : "url(#arrow-bad)");
+      path.style.cursor = "help";
+      path.addEventListener("click", () => {
+        const detail = $("#dg-detail");
+        detail.hidden = false;
+        $("#dg-eyebrow").textContent =
+          `${e.type.toUpperCase()} · ${a.name} → ${b.name} · strength ${e.strength.toFixed(2)}`;
+        $("#dg-body").textContent = e.note;
+      });
+      const title = document.createElementNS(NS, "title");
+      title.textContent = `${e.type}: ${a.name} → ${b.name}\n${e.note}`;
+      path.appendChild(title);
+      svg.appendChild(path);
+    }
+
+    // Nodes
+    for (const n of DEPENDENCIES.nodes) {
+      const g = document.createElementNS(NS, "g");
+      g.setAttribute("transform", `translate(${n.x}, ${n.y})`);
+      const r = 0.045 + (n.strength / 100) * 0.05;
+
+      const circle = document.createElementNS(NS, "circle");
+      circle.setAttribute("class", `dg-node-circle ${n.tier}`);
+      circle.setAttribute("r", String(r));
+      circle.setAttribute("fill-opacity", "0.85");
+      circle.setAttribute("stroke", "rgba(0,0,0,.5)");
+      circle.setAttribute("stroke-width", "0.004");
+      circle.addEventListener("click", () => {
+        state.dominantId = n.id;
+        $$(".narr-row").forEach(rr => rr.classList.toggle("active", rr.dataset.id === n.id));
+        renderHero();
+        renderMatrix();
+        renderCrossAsset();
+      });
+      const t = document.createElementNS(NS, "title");
+      t.textContent = `${n.name}\nstrength ${n.strength}\ntier ${n.tier}`;
+      circle.appendChild(t);
+      g.appendChild(circle);
+
+      const lines = wrapName(n.name, 14);
+      const label = document.createElementNS(NS, "text");
+      label.setAttribute("class", "dg-node-label");
+      label.setAttribute("y", String(r + 0.06));
+      // Push labels outside the radius so they don't overlap circles.
+      lines.forEach((line, i) => {
+        const tspan = document.createElementNS(NS, "tspan");
+        tspan.setAttribute("x", "0");
+        tspan.setAttribute("dy", i === 0 ? "0" : "0.05");
+        tspan.textContent = line;
+        label.appendChild(tspan);
+      });
+      g.appendChild(label);
+      svg.appendChild(g);
+    }
+  }
+
+  function wrapName(name, max) {
+    const words = name.split(" ");
+    const lines = [""];
+    for (const w of words) {
+      const candidate = lines[lines.length - 1] ? lines[lines.length - 1] + " " + w : w;
+      if (candidate.length <= max) lines[lines.length - 1] = candidate;
+      else lines.push(w);
+    }
+    return lines.slice(0, 2);
+  }
+
+  // ---- Backtest ----------------------------------------------
+  function renderBacktest() {
+    if (!BACKTEST) return;
+    const stats = BACKTEST.stats;
+    const statsHost = $("#bt-stats");
+    statsHost.innerHTML = "";
+
+    const cells = [
+      { label: "Events tracked",      value: String(stats.events) },
+      { label: "Regime-break hit rate", value: stats.regimeBreakHitRate + "%",
+        cls: stats.regimeBreakHitRate >= 50 ? "down" : "up" },
+      { label: "Avg lead time",       value: stats.avgLeadDays + "d" },
+      { label: "Avg market reaction", value: (stats.avgReactionPct >= 0 ? "+" : "") + stats.avgReactionPct + "%",
+        cls: stats.avgReactionPct >= 0 ? "up" : "down" }
+    ];
+    for (const c of cells) {
+      statsHost.appendChild(el("div", { class: "bt-stat" },
+        el("div", { class: "bt-stat-label" }, c.label),
+        el("div", { class: `bt-stat-value ${c.cls || ""}` }, c.value)
+      ));
+    }
+
+    const tbody = $("#bt-tbody");
+    tbody.innerHTML = "";
+    const sorted = [...BACKTEST.events].sort((a, b) => a.detectedWeeksAgo - b.detectedWeeksAgo);
+    for (const e of sorted) {
+      const open = e.resolutionDays === null;
+      const reactCls = open ? "" : (e.marketReactionPct >= 0 ? "up" : "down");
+      const breakCell = open
+        ? el("td", { class: "bt-open" }, "open")
+        : (e.regimeBreak
+            ? el("td", { class: "bt-break" }, "BROKE")
+            : el("td", { class: "bt-no-break" }, "held"));
+      const row = el("tr", {},
+        el("td", {}, `${e.detectedWeeksAgo}w ago`),
+        el("td", {}, e.narrative),
+        el("td", {}, e.signal),
+        el("td", { class: "num" }, e.severityAtDetection.toFixed(2)),
+        el("td", { class: "num" }, open ? "—" : String(e.resolutionDays)),
+        breakCell,
+        el("td", { class: `num bt-react ${reactCls}` },
+          open ? "—" : (e.marketReactionPct >= 0 ? "+" : "") + e.marketReactionPct + "%"),
+        el("td", { class: "bt-lesson" }, e.lesson)
+      );
+      tbody.appendChild(row);
+    }
+  }
+
+  // ---- Source indicator --------------------------------------
+  function renderSource(source) {
+    const pill = $("#source-pill");
+    const text = $("#source-text");
+    if (source === "scoring-pipeline" || source === "live") {
+      pill.dataset.source = "live";
+      text.textContent = "live · scoring";
+    } else {
+      pill.dataset.source = "static";
+      text.textContent = "static";
+    }
+  }
+
   // ---- Live tick (subtle) ------------------------------------
   // The point: numbers should feel alive, not frozen.
   // We perturb strength slightly within a small bound and
@@ -393,24 +634,43 @@
   }
 
   // ---- Boot --------------------------------------------------
-  function boot() {
-    renderTopbar();
+  async function boot() {
+    // Paint the static fallback immediately so the user never sees a blank.
+    paintAll();
     renderClock();
-    renderHero();
     startRotator();
-    renderTracker();
-    renderPsychology();
-    renderMatrix();
-    renderCrossAsset();
-    renderVelocity();
-    renderInsights();
     startLiveTick();
+    renderSource(window.NI.source || "static-fallback");
+
+    // Then upgrade to the live snapshot if available.
+    const { source } = await loadLiveData();
+    renderSource(source);
+    // Reset selected dominant to the strongest narrative in the live data.
+    if (window.NI.NARRATIVES && window.NI.NARRATIVES.length) {
+      const strongest = [...window.NI.NARRATIVES].sort((a, b) => b.strength - a.strength)[0];
+      if (strongest) state.dominantId = strongest.id;
+    }
+    paintAll();
 
     // Hide tooltip on scroll/click outside matrix
     document.addEventListener("scroll", () => {
       const tip = $("#tooltip");
       tip.classList.remove("visible");
     }, { passive: true });
+  }
+
+  function paintAll() {
+    renderTopbar();
+    renderHero();
+    renderTracker();
+    renderPsychology();
+    renderTimeline();
+    renderMatrix();
+    renderCrossAsset();
+    renderDependencyGraph();
+    renderBacktest();
+    renderVelocity();
+    renderInsights();
   }
 
   if (document.readyState === "loading") {

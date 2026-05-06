@@ -296,8 +296,106 @@ window.NI = (function () {
     { tag:"VOLATILITY",     ts:"-2h",  body:"MOVE/VIX ratio at 6m highs — rates tail is leading, not lagging."}
   ];
 
+  // ---- Regime history -----------------------------------------
+  // Each item: a previous regime that ended, plus the current one (endWeeksAgo: 0).
+  const REGIME_HISTORY = [
+    { id:"early-cycle-reflation", name:"Early-cycle Reflation",
+      polarity:"bullish-risk",        startWeeksAgo:78, endWeeksAgo:64, peakStrength:72,
+      transitionReason:"Fed cuts run out of room; rates floor reasserted." },
+    { id:"soft-landing-1",        name:"Soft Landing v1",
+      polarity:"bullish-risk",        startWeeksAgo:64, endWeeksAgo:41, peakStrength:78,
+      transitionReason:"Sticky services CPI cracks the disinflation script." },
+    { id:"higher-for-longer-1",   name:"Higher-for-Longer",
+      polarity:"bearish-duration",    startWeeksAgo:41, endWeeksAgo:26, peakStrength:67,
+      transitionReason:"Labor cools; Powell pivots dovish." },
+    { id:"soft-landing-2",        name:"Soft Landing v2",
+      polarity:"bullish-risk",        startWeeksAgo:26, endWeeksAgo:14, peakStrength:71,
+      transitionReason:"Term-premium re-emergence dents pricing of cuts." },
+    { id:"late-cycle-current",    name:"Late-cycle · Disinflationary tilt",
+      polarity:"neutral",             startWeeksAgo:14, endWeeksAgo:0,  peakStrength:73,
+      transitionReason:"Current regime." }
+  ];
+
+  // ---- Dependency graph (precomputed coords) -------------------
+  // Coordinates live in normalized [-1, 1] space; the renderer maps to viewBox.
+  const _depNodes = (() => {
+    const ids = NARRATIVES.map(n => n.id);
+    const N = ids.length;
+    return ids.map((id, i) => {
+      const ang = (i / N) * Math.PI * 2 - Math.PI / 2;
+      const n = NARRATIVES.find(x => x.id === id);
+      const r = 1 - (n.strength - 50) / 220;
+      return { id, name: n.name, x: +(Math.cos(ang) * r).toFixed(3), y: +(Math.sin(ang) * r).toFixed(3),
+               strength: n.strength, tier: n.tier };
+    });
+  })();
+  const DEPENDENCIES = {
+    nodes: _depNodes,
+    edges: [
+      { from:"ai-supercycle",     to:"energy-stress",     type:"reinforce", strength:0.84, note:"AI capex pulls forward power-grid + uranium demand." },
+      { from:"ai-supercycle",     to:"reshoring",         type:"reinforce", strength:0.62, note:"Onshoring of semis + datacenters compounds capex story." },
+      { from:"ai-supercycle",     to:"higher-for-longer", type:"reinforce", strength:0.41, note:"Capex demand keeps real-rate floor higher." },
+      { from:"soft-landing",      to:"ai-supercycle",     type:"reinforce", strength:0.55, note:"Risk-on regime supports multiples on long-duration AI." },
+      { from:"higher-for-longer", to:"soft-landing",      type:"oppose",    strength:0.78, note:"Sticky rates contradict friction-free disinflation." },
+      { from:"higher-for-longer", to:"bond-vigilantes",   type:"reinforce", strength:0.81, note:"Same forcing function — fiscal supply + inflation persistence." },
+      { from:"higher-for-longer", to:"crypto-rerating",   type:"oppose",    strength:0.66, note:"Real rates pressure speculative duration." },
+      { from:"bond-vigilantes",   to:"dxy-wrecking",      type:"reinforce", strength:0.58, note:"Term premium widens carry; supports USD." },
+      { from:"dxy-wrecking",      to:"china-stimulus",    type:"oppose",    strength:0.73, note:"Strong USD limits PBoC stimulus credibility." },
+      { from:"dxy-wrecking",      to:"soft-landing",      type:"oppose",    strength:0.45, note:"USD wrecking ball compresses non-US earnings." },
+      { from:"energy-stress",     to:"geopolitical",      type:"reinforce", strength:0.49, note:"Strait/Gulf risk amplifies energy bottleneck premium." },
+      { from:"geopolitical",      to:"soft-landing",      type:"oppose",    strength:0.42, note:"Tail risk unsettles risk-on consensus." },
+      { from:"reshoring",         to:"higher-for-longer", type:"reinforce", strength:0.36, note:"Capex-led growth keeps demand pressure on rates." },
+      { from:"china-stimulus",    to:"geopolitical",      type:"oppose",    strength:0.31, note:"Stimulus optimism dampens tail-risk pricing." },
+      { from:"crypto-rerating",   to:"ai-supercycle",     type:"reinforce", strength:0.28, note:"Same liquidity-sensitive risk basket; rerates together." }
+    ]
+  };
+
+  // ---- Backtest: historical contradictions and how they resolved
+  const BACKTEST = {
+    events: [
+      { id:"bt-2024-08", detectedWeeksAgo:90, narrative:"Soft Landing v1", signal:"Vol term structure",
+        severityAtDetection:0.78, resolutionDays:21, regimeBreak:true,
+        marketReactionPct:-6.4, lesson:"VIX/VIX3M inversion on rising index → 14d drawdown median." },
+      { id:"bt-2024-11", detectedWeeksAgo:78, narrative:"Soft Landing v1", signal:"Credit spreads",
+        severityAtDetection:0.55, resolutionDays:38, regimeBreak:false,
+        marketReactionPct:1.1,  lesson:"Single-signal contradictions resolve benignly ~62% of the time." },
+      { id:"bt-2025-02", detectedWeeksAgo:65, narrative:"AI Supercycle", signal:"Equity breadth",
+        severityAtDetection:0.81, resolutionDays:45, regimeBreak:false,
+        marketReactionPct:-3.2, lesson:"Concentration risk leads, not lags — fade strength when breadth diverges 4w." },
+      { id:"bt-2025-05", detectedWeeksAgo:52, narrative:"Higher-for-Longer", signal:"Rates / curve",
+        severityAtDetection:0.74, resolutionDays:16, regimeBreak:true,
+        marketReactionPct:-4.8, lesson:"Rates-led contradictions resolve fastest; 14–18d typical." },
+      { id:"bt-2025-07", detectedWeeksAgo:44, narrative:"Reshoring", signal:"FX / DXY",
+        severityAtDetection:0.45, resolutionDays:60, regimeBreak:false,
+        marketReactionPct:-0.4, lesson:"FX divergences alone are weak triggers." },
+      { id:"bt-2025-10", detectedWeeksAgo:31, narrative:"Soft Landing v2", signal:"Vol term structure",
+        severityAtDetection:0.69, resolutionDays:25, regimeBreak:true,
+        marketReactionPct:-5.1, lesson:"Repeat of 2024-08 signature — vol-term-structure is the highest-fidelity early warning." },
+      { id:"bt-2025-12", detectedWeeksAgo:22, narrative:"Bond Vigilantes", signal:"Rates / curve",
+        severityAtDetection:0.82, resolutionDays:12, regimeBreak:true,
+        marketReactionPct:-3.9, lesson:"Term-premium repricing → multiple compression in long-duration baskets." },
+      { id:"bt-2026-02", detectedWeeksAgo:12, narrative:"AI Supercycle", signal:"Retail vs dealer flow",
+        severityAtDetection:0.72, resolutionDays:18, regimeBreak:false,
+        marketReactionPct:-2.7, lesson:"Retail/dealer flow detachment → mean-reversion over 2–3w." },
+      { id:"bt-2026-04", detectedWeeksAgo:4,  narrative:"Soft Landing v2", signal:"Equity breadth",
+        severityAtDetection:0.58, resolutionDays:null, regimeBreak:null,
+        marketReactionPct:null, lesson:"Open. Severity rising; mirrors 2025-02 progression." }
+    ],
+    stats: {
+      events: 9,
+      regimeBreakHitRate: 50,
+      avgLeadDays: 29.4,
+      avgReactionPct: -3.18
+    }
+  };
+
   // ---- Helper: lookup by id -----------------------------------
   function byId(arr, id) { return arr.find(x => x.id === id); }
 
-  return { REGIME, NARRATIVES, SIGNALS, MATRIX, CROSSASSET, PSYCHOLOGY, INSIGHTS, byId };
+  return {
+    source: "static-fallback",
+    REGIME, REGIME_HISTORY, NARRATIVES, SIGNALS, MATRIX,
+    CROSSASSET, PSYCHOLOGY, INSIGHTS, DEPENDENCIES, BACKTEST,
+    byId
+  };
 })();
